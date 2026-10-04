@@ -1,34 +1,418 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Filmle</title><style>
-:root{--bg:#090b10;--p:#121620;--p2:#1a202b;--t:#f4f5f7;--m:#9ca3af;--g:#2e9d68;--y:#b98632;--r:#a64d56;--line:#2b3140}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -20%,#252b3b,#090b10 45%);color:var(--t);font-family:system-ui,Segoe UI,Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:25px 16px 50px}.top{display:flex;justify-content:space-between;align-items:center;gap:15px}.brand{font-size:28px;font-weight:800}.brand span{color:#e8b94d}.sub,.help,.muted{color:var(--m)}button{border:1px solid var(--line);background:var(--p);color:var(--t);padding:10px 14px;border-radius:10px;cursor:pointer}.hero{text-align:center;margin:42px 0 22px}.hero h1{font-size:38px;margin:0}.stats{display:flex;justify-content:center;gap:10px;margin:16px}.pill{background:var(--p);border:1px solid var(--line);padding:7px 12px;border-radius:99px;color:var(--m)}.search{max-width:760px;margin:auto;position:relative}.search input{width:100%;padding:16px;border:1px solid var(--line);border-radius:14px;background:#10141c;color:#fff;font-size:17px}.suggestions{position:absolute;left:0;right:0;top:58px;background:#171c25;border:1px solid var(--line);border-radius:12px;overflow:hidden;z-index:5}.suggestion{padding:12px 15px;display:flex;justify-content:space-between;cursor:pointer}.suggestion:hover{background:#252c38}.board{margin-top:15px;overflow:auto;border:1px solid var(--line);border-radius:15px}.row{display:grid;grid-template-columns:1.55fr repeat(7,1fr);min-width:980px}.cell{min-height:62px;padding:10px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center}.head{min-height:44px;background:#171c27;color:#aeb4c0;font-size:12px;text-transform:uppercase;font-weight:700}.movie{justify-content:flex-start;text-align:left;font-weight:700}.movie small{display:block;color:var(--m);font-weight:400;margin-top:3px}.match{background:#1b5b3e}.partial{background:#614919}.wrong{background:#4e252b}.supporting-list{display:flex;flex-direction:column;gap:4px;width:100%}.supporting-actor{padding:5px 4px;border-radius:6px;font-size:12px;line-height:1.15}.supporting-actor.match{background:#1b5b3e}.supporting-actor.wrong{background:#252a33;color:#b8bec8}.arrow{margin-left:6px}.empty{text-align:center;padding:42px;color:var(--m)}.help{text-align:center;margin-top:16px;font-size:13px}.modal{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{background:#151a24;border:1px solid var(--line);border-radius:18px;padding:25px;max-width:500px;width:100%}.answer{font-size:28px;font-weight:800;margin-top:15px}.win{color:#77e4ac;font-weight:800}@media(max-width:700px){.top{align-items:flex-start}.hero h1{font-size:30px}}
-.game-buttons{
-    display:flex;
-    gap:8px;
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Filmle — Egyptian Movie Guessing Game</title>
+<style>
+:root{
+  --bg:#080a0f;
+  --surface:#12161f;
+  --surface2:#181e29;
+  --text:#f3f4f6;
+  --muted:#9ca3af;
+  --accent:#e8b94d;
+  --line:#2a3142;
+  --match:#1b5b3e;
+  --match-text:#b8f0d0;
+  --partial:#614919;
+  --partial-text:#f0d9a8;
+  --wrong:#3d2228;
+  --wrong-text:#d4a0a8;
+  --radius:14px;
+  --shadow:0 8px 32px rgba(0,0,0,.35);
 }
-.mode{
-    display:inline-block;
-    margin-bottom:10px;
-    padding:6px 12px;
-    border:1px solid var(--line);
-    border-radius:99px;
-    background:var(--p);
-    color:var(--m);
-    font-size:13px;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(ellipse 120% 80% at 50% -30%,#1e2433 0%,var(--bg) 55%);
+  color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  line-height:1.45;
+}
+.wrap{max-width:960px;margin:0 auto;padding:20px 16px 48px}
+.site-header{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:24px;
+}
+.brand-block .brand{
+  margin:0;
+  font-size:1.75rem;
+  font-weight:800;
+  letter-spacing:.06em;
+}
+.brand-block .brand span{color:var(--accent)}
+.subtitle{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+.game-nav{display:flex;flex-wrap:wrap;gap:8px}
+.btn{
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--text);
+  padding:10px 16px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:.9rem;
+  font-weight:600;
+  transition:background .15s,border-color .15s,transform .1s;
+}
+.btn:hover{background:var(--surface2);border-color:#3d465a}
+.btn:active{transform:scale(.98)}
+.btn.active{border-color:var(--accent);color:var(--accent)}
+.hud{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:10px;
+  margin-bottom:22px;
+}
+.hud-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  box-shadow:var(--shadow);
+}
+.hud-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px}
+.hud-value{font-size:1.05rem;font-weight:700}
+.mode-badge{display:inline-flex;align-items:center;gap:6px}
+.search-section{margin-bottom:18px}
+.search-wrap{position:relative;max-width:100%}
+.search-wrap .icon{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  font-size:1.1rem;pointer-events:none;opacity:.7;
+}
+#q{
+  width:100%;
+  padding:16px 16px 16px 44px;
+  font-size:1.05rem;
+  border:2px solid var(--line);
+  border-radius:var(--radius);
+  background:#0c1018;
+  color:var(--text);
+  transition:border-color .2s,box-shadow .2s;
+}
+#q:focus{
+  outline:none;
+  border-color:#4a5568;
+  box-shadow:0 0 0 3px rgba(232,185,77,.15);
+}
+#q:disabled{opacity:.55;cursor:not-allowed}
+.suggestions{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);
+  background:var(--surface2);
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  z-index:20;
+  box-shadow:var(--shadow);
+  max-height:320px;
+  overflow-y:auto;
+}
+.suggestion{
+  padding:12px 16px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  border-bottom:1px solid var(--line);
+  transition:background .12s;
+}
+.suggestion:last-child{border-bottom:none}
+.suggestion:hover,.suggestion.active{background:#252c38}
+.suggestion .en{color:var(--muted);font-size:.85rem;text-align:right}
+.legend{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px;
+  font-size:.85rem;color:var(--muted);
+  margin-bottom:16px;
+}
+.guesses-area{margin-top:8px}
+.empty-state{
+  text-align:center;padding:40px 20px;
+  color:var(--muted);
+  background:var(--surface);
+  border:1px dashed var(--line);
+  border-radius:var(--radius);
+}
+.guess-table-head{display:none}
+@media(min-width:900px){
+  .guess-table-head{
+    display:grid;
+    grid-template-columns:1.4fr repeat(7,minmax(0,1fr));
+    gap:1px;
+    background:var(--line);
+    border-radius:var(--radius) var(--radius) 0 0;
+    overflow:hidden;
+    margin-bottom:1px;
+  }
+  .guess-table-head .th{
+    background:#171c27;
+    padding:10px 8px;
+    font-size:.68rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
     font-weight:700;
+    color:#aeb4c0;
+    text-align:center;
+  }
+  .guess-table-head .th.movie{text-align:left}
+  .guess-card{
+    display:grid;
+    grid-template-columns:1.4fr repeat(7,minmax(0,1fr));
+    gap:1px;
+    background:var(--line);
+    margin-bottom:8px;
+    border-radius:var(--radius);
+    overflow:hidden;
+    animation:fadeIn .25s ease;
+  }
+  .guess-card .fields{display:contents}
+  .guess-card .cell-field{
+    flex-direction:column;
+    padding:10px 8px;
+    min-height:62px;
+    background:var(--surface);
+    margin:0;
+  }
+  .guess-card .field-label{display:none!important}
+  .guess-card .cell-field.movie-col .field-value{align-items:flex-start;text-align:left}
+  .guess-card .field-value{
+    width:100%;
+    min-height:100%;
+    border-radius:6px;
+  }
 }
-@media(max-width:700px){
-    .top{align-items:flex-start}
-    .hero h1{font-size:30px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.guess-card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  margin-bottom:12px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  animation:fadeIn .25s ease;
 }
-</style></head><body><main class="wrap"><header class="top"><div><div class="brand">Filmle</div><div class="sub">The Egyptian movie guessing game</div></div><div class="game-buttons">
-    <button onclick="dailyGame()">Daily Film</button>
-    <button onclick="newGame()">New Game</button>
-</div></header><section class="hero">
-    <div id="mode" class="mode">🎬 Random Game</div>
-    <h1>Guess the movie</h1><p class="muted">10 guesses · green = exact · yellow = close · red = no match</p><div class="stats"><div class="pill">Guess <b id="count">0</b>/10</div><div class="pill">Films <b id="total">0</b></div></div></section><div class="search"><input id="q" placeholder="Type an Egyptian movie title…" autocomplete="off"><div id="s" class="suggestions"></div></div><section class="board"><div class="row"><div class="cell head movie">Movie</div><div class="cell head">Year</div><div class="cell head">Director</div><div class="cell head">Lead Actor</div><div class="cell head">Lead Actress</div><div class="cell head">Supporting Actors</div><div class="cell head">Genre</div><div class="cell head">Rating</div></div><div id="rows"></div><div id="empty" class="empty">Start by searching for a movie.</div></section><div class="help">
-  Year is close within 5 years. Rating is close within 1 point. Supporting actors turn green when they appear in the target film. Arrows show whether the target is higher or lower.
-  <br><br>
-  Ratings are based on elcinema.com.
-</div></main><div id="modal" class="modal"><div class="modalbox"><div class="win" id="result"></div><div class="answer" id="ans"></div><p id="info" class="muted"></p><button onclick="closeModal()">Continue</button></div></div>
+.guess-card .fields{padding:8px 12px 12px}
+@media(max-width:899px){
+  .guess-card .fields{padding:8px 12px 12px}
+  .guess-card .cell-field.movie-col .field-value .ar{font-weight:800;font-size:1.05rem}
+  .guess-card .cell-field.movie-col .field-value .en{color:var(--muted);font-size:.88rem}
+}
+.cell-field{
+  display:flex;
+  align-items:stretch;
+  gap:10px;
+  padding:8px 4px;
+  min-height:44px;
+}
+.field-label{
+  flex:0 0 38%;
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+}
+.field-value{
+  flex:1;
+  padding:8px 10px;
+  border-radius:8px;
+  font-size:.9rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  flex-wrap:wrap;
+  gap:4px;
+}
+.field-value.align-start{justify-content:flex-start;text-align:left}
+.field-value.match{background:var(--match);color:var(--match-text)}
+.field-value.partial{background:var(--partial);color:var(--partial-text)}
+.field-value.wrong{background:var(--wrong);color:var(--wrong-text)}
+.tag-list{display:flex;flex-direction:column;gap:4px;width:100%}
+.tag{
+  padding:5px 8px;
+  border-radius:6px;
+  font-size:.78rem;
+  text-align:center;
+}
+.tag.match{background:var(--match);color:var(--match-text)}
+.tag.partial{background:var(--partial);color:var(--partial-text)}
+.tag.wrong{background:#252a33;color:#b8bec8}
+.arrow{margin-left:4px;font-size:.85em;opacity:.9}
+.help-footer{
+  margin-top:28px;
+  text-align:center;
+  font-size:.82rem;
+  color:var(--muted);
+  line-height:1.6;
+}
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+  backdrop-filter:blur(4px);
+}
+.modal.show{display:flex}
+.modalbox{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:28px 24px;
+  max-width:440px;
+  width:100%;
+  box-shadow:var(--shadow);
+  max-height:90vh;
+  overflow-y:auto;
+}
+.modal-emoji{font-size:2.5rem;text-align:center;margin-bottom:8px}
+.modal-title{
+  text-align:center;
+  font-size:1.35rem;
+  font-weight:800;
+  color:#77e4ac;
+  margin:0 0 8px;
+}
+.modal-title.lose{color:#e8a0a8}
+.modal-movie{
+  text-align:center;
+  font-size:1.5rem;
+  font-weight:800;
+  margin:0 0 4px;
+}
+.modal-sub{text-align:center;color:var(--muted);margin:0 0 16px;font-size:.9rem}
+.modal-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:18px;
+}
+.modal-stat{
+  background:var(--surface2);
+  border-radius:10px;
+  padding:12px;
+  text-align:center;
+}
+.modal-stat .label{font-size:.7rem;color:var(--muted);text-transform:uppercase}
+.modal-stat .val{font-size:1.25rem;font-weight:800;margin-top:4px}
+.modal-info{
+  font-size:.88rem;
+  color:var(--muted);
+  line-height:1.65;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+  margin-bottom:18px;
+}
+.modal-info b{color:var(--text)}
+.modal-actions{display:flex;flex-direction:column;gap:8px}
+.modal-actions .btn{width:100%}
+.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="site-header">
+    <div class="brand-block">
+      <h1 class="brand">FILM<span>LE</span></h1>
+      <p class="subtitle" id="gameSubtitle">Daily Challenge</p>
+    </div>
+    <nav class="game-nav" aria-label="Game mode">
+      <button type="button" class="btn" id="btnDaily">📅 Daily Game</button>
+      <button type="button" class="btn" id="btnRandom">🎲 Random Game</button>
+    </nav>
+  </header>
+
+  <section class="hud" aria-live="polite">
+    <div class="hud-card">
+      <div class="hud-label">Mode</div>
+      <div class="hud-value mode-badge" id="modeDisplay">📅 Daily</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">Guesses</div>
+      <div class="hud-value"><span id="count">0</span> / 10</div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">Timer</div>
+      <div class="hud-value">⏱ <span id="timer">00:00</span></div>
+    </div>
+    <div class="hud-card">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="scoreDisplay">—</div>
+    </div>
+  </section>
+
+  <section class="search-section">
+    <label for="q" class="visually-hidden">Search for a movie</label>
+    <div class="search-wrap">
+      <span class="icon" aria-hidden="true">🔎</span>
+      <input id="q" type="search" placeholder="Search for a movie..." autocomplete="off">
+      <div id="s" class="suggestions" role="listbox" hidden></div>
+    </div>
+  </section>
+
+  <div class="legend" aria-hidden="true">
+    <span>🟢 Correct</span>
+    <span>🟡 Partial</span>
+    <span>🔴 Wrong</span>
+  </div>
+
+  <section class="guesses-area" aria-label="Your guesses">
+    <div class="guess-table-head" aria-hidden="true">
+      <div class="th movie">Movie</div>
+      <div class="th">Year</div>
+      <div class="th">Director</div>
+      <div class="th">Lead Actor</div>
+      <div class="th">Lead Actress</div>
+      <div class="th">Supporting</div>
+      <div class="th">Genre</div>
+      <div class="th">Rating</div>
+    </div>
+    <div id="rows"></div>
+    <div id="empty" class="empty-state">Start by searching for an Egyptian movie title.</div>
+  </section>
+
+  <footer class="help-footer">
+    Year is close within 5 years. Rating is close within 1 point. Supporting actors turn green when they appear in the target film. Arrows show whether the target is higher or lower.
+    <br><br>
+    Ratings are based on elcinema.com. · <span id="total"></span> films in database
+  </footer>
+</main>
+
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modalbox">
+    <div class="modal-emoji" id="modalEmoji"></div>
+    <h2 class="modal-title" id="modalTitle"></h2>
+    <p class="modal-movie" id="ans"></p>
+    <p class="modal-sub" id="modalSub"></p>
+    <div class="modal-stats">
+      <div class="modal-stat">
+        <div class="label">Score</div>
+        <div class="val" id="modalScore">0</div>
+      </div>
+      <div class="modal-stat">
+        <div class="label">Time</div>
+        <div class="val" id="modalTime">00:00</div>
+      </div>
+    </div>
+    <p class="modal-sub" id="modalGuesses"></p>
+    <div class="modal-info" id="info"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="btnModalRandom">🔄 New Random Game</button>
+      <button type="button" class="btn" id="btnModalDaily">📅 Daily Game</button>
+      <button type="button" class="btn" id="btnModalClose">Continue</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // Embedded database. No CSV, server, internet connection, or external assets are required.
 // Optional 9th field: Supporting Actor 1,Supporting Actor 2,Supporting Actor 3.
@@ -205,245 +589,604 @@ const films=raw.trim().split(/\n+/).map((x,i)=>{
     supporting_actors:(p[8]||'').split(',').map(x=>x.trim()).filter(Boolean).slice(0,3)
   };
 });
-let target,guesses=[];const $=x=>document.getElementById(x);const norm=x=>(x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();const esc=x=>String(x).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));function getDailyFilm(){
-    const today=new Date();
-    const dateKey=today.getFullYear()+'-'+
-        String(today.getMonth()+1).padStart(2,'0')+'-'+
-        String(today.getDate()).padStart(2,'0');
 
-    let hash=0;
 
-    for(let i=0;i<dateKey.length;i++){
-        hash=((hash<<5)-hash)+dateKey.charCodeAt(i);
-        hash|=0;
-    }
+const MAX_GUESSES = 10;
+const DAILY_STORAGE_KEY = 'dailyGame';
 
-    hash=Math.abs(hash);
+let gameMode = 'daily';
+let target = null;
+let guesses = [];
+let gameFinished = false;
+let gameWon = false;
+let finalScore = null;
 
-    return films[hash%films.length];
+let gameStartTime = null;
+let timerEndTime = null;
+let frozenElapsedSeconds = null;
+let timerInterval = null;
+
+let suggestionHighlight = -1;
+let currentSuggestions = [];
+
+const $ = (id) => document.getElementById(id);
+
+const norm = (x) =>
+  (x || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+const esc = (x) =>
+  String(x).replace(/[&<>"']/g, (m) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])
+  );
+
+function getTodayKey() {
+  const today = new Date();
+  return (
+    today.getFullYear() +
+    '-' +
+    String(today.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(today.getDate()).padStart(2, '0')
+  );
 }
 
-function getTodayKey(){
-  const today=new Date();
-  return today.getFullYear()+'-'+
-    String(today.getMonth()+1).padStart(2,'0')+'-'+
-    String(today.getDate()).padStart(2,'0');
+function getDailyFilm() {
+  const dateKey = getTodayKey();
+  let hash = 0;
+  for (let i = 0; i < dateKey.length; i++) {
+    hash = (hash << 5) - hash + dateKey.charCodeAt(i);
+    hash |= 0;
+  }
+  hash = Math.abs(hash);
+  return films[hash % films.length];
 }
 
-function dailyGame(){
-  const today=getTodayKey();
-  const saved=JSON.parse(localStorage.getItem('dailyGame'));
+function genreList(f) {
+  if (!f) return [];
+  if (Array.isArray(f.genres) && f.genres.length) return f.genres;
+  if (f.genre) return [f.genre];
+  return [];
+}
 
-  target=getDailyFilm();
-  $('mode').textContent='📅 Daily Film';
+function formatGenreDisplay(f) {
+  const list = genreList(f);
+  return list.length ? list.join(', ') : '—';
+}
 
-  if(saved && saved.date===today){
-    guesses=saved.guesses
-      .map(id=>films.find(f=>f.id===id))
+function calculateGuessScore(guessCount) {
+  if (guessCount < 1 || guessCount > MAX_GUESSES) return 0;
+  return 1100 - guessCount * 100;
+}
+
+function calculateSpeedBonus(elapsedSeconds) {
+  return Math.min(100, Math.max(0, 100 - elapsedSeconds));
+}
+
+function calculateFinalScore(guessCount, elapsedSeconds, won) {
+  if (!won) return 0;
+  const base = calculateGuessScore(guessCount);
+  const bonus = calculateSpeedBonus(elapsedSeconds);
+  return Math.min(1100, Math.max(0, base + bonus));
+}
+
+function getElapsedSeconds() {
+  if (frozenElapsedSeconds != null) return frozenElapsedSeconds;
+  if (!gameStartTime) return 0;
+  const end = timerEndTime ?? Date.now();
+  return Math.max(0, Math.floor((end - gameStartTime) / 1000));
+}
+
+function formatTimer(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function formatTimeHuman(seconds) {
+  if (seconds >= 60) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+  return seconds + ' seconds';
+}
+
+function startTimer() {
+  stopTimerInterval();
+  if (gameFinished) {
+    updateTimerDisplay();
+    return;
+  }
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+  updateTimerDisplay();
+}
+
+function stopTimerInterval() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function stopTimer() {
+  if (!gameFinished && gameStartTime) {
+    timerEndTime = Date.now();
+    frozenElapsedSeconds = getElapsedSeconds();
+  }
+  stopTimerInterval();
+  updateTimerDisplay();
+}
+
+function resetTimerState() {
+  stopTimerInterval();
+  gameStartTime = Date.now();
+  timerEndTime = null;
+  frozenElapsedSeconds = null;
+}
+
+function updateTimerDisplay() {
+  $('timer').textContent = formatTimer(getElapsedSeconds());
+  updateHudScore();
+}
+
+function loadDailyGame() {
+  try {
+    const raw = localStorage.getItem(DAILY_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDailyGame() {
+  if (gameMode !== 'daily') return;
+  const payload = {
+    date: getTodayKey(),
+    guesses: guesses.map((g) => g.id),
+    finished: gameFinished,
+    won: gameWon,
+    score: finalScore,
+    startTime: gameStartTime,
+    endTime: timerEndTime,
+    elapsedSeconds: getElapsedSeconds(),
+  };
+  localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(payload));
+}
+
+function relField(a, b, type) {
+  if (type === 'year') {
+    const d = Math.abs(Number(a) - Number(b));
+    if (d === 0) return 'match';
+    if (d <= 5) return 'partial';
+    return 'wrong';
+  }
+  if (type === 'rating') {
+    const d = Math.abs(Number(a) - Number(b));
+    if (d === 0) return 'match';
+    if (d <= 1) return 'partial';
+    return 'wrong';
+  }
+  return norm(a) === norm(b) ? 'match' : 'wrong';
+}
+
+function leadRoleStatus(guessedName, tgt) {
+  const g = norm(guessedName);
+  if (!g || g === '-') return 'wrong';
+  if (g === norm(tgt.lead_actor) || g === norm(tgt.lead_actress)) return 'match';
+  const supporting = (tgt.supporting_actors || []).map(norm);
+  if (supporting.includes(g)) return 'partial';
+  return 'wrong';
+}
+
+function supportingActorStatus(actor, tgt) {
+  const actorNorm = norm(actor);
+  if (!actorNorm) return 'wrong';
+  const targetSupporting = (tgt.supporting_actors || []).map(norm);
+  if (targetSupporting.includes(actorNorm)) return 'match';
+  if (actorNorm === norm(tgt.lead_actor) || actorNorm === norm(tgt.lead_actress)) {
+    return 'partial';
+  }
+  return 'wrong';
+}
+
+function renderTagList(items, getStatus) {
+  const list = items && items.length ? items : [];
+  if (!list.length) {
+    return '<div class="tag wrong">—</div>';
+  }
+  return (
+    '<div class="tag-list">' +
+    list
+      .map((item) => {
+        const status = getStatus(item);
+        return '<div class="tag ' + status + '">' + esc(item) + '</div>';
+      })
+      .join('') +
+    '</div>'
+  );
+}
+
+function genreCellHtml(f, tgt) {
+  const targetGenres = genreList(tgt).map(norm);
+  const genres = genreList(f);
+  if (!genres.length) {
+    return '<div class="tag wrong">—</div>';
+  }
+  return renderTagList(genres, (genre) =>
+    targetGenres.includes(norm(genre)) ? 'match' : 'wrong'
+  );
+}
+
+function supportingCellHtml(g, tgt) {
+  const actors = g.supporting_actors || [];
+  return renderTagList(actors, (actor) => supportingActorStatus(actor, tgt));
+}
+
+function arrowHtml(fieldKey, status, g, tgt) {
+  if (fieldKey !== 'release_year' && fieldKey !== 'rating') return '';
+  if (status === 'match') return '';
+  const gv = Number(g[fieldKey]);
+  const tv = Number(tgt[fieldKey]);
+  if (Number.isNaN(gv) || Number.isNaN(tv)) return '';
+  return '<span class="arrow">' + (gv < tv ? '↑' : '↓') + '</span>';
+}
+
+function cellField(label, innerHtml, extraClass) {
+  return (
+    '<div class="cell-field' +
+    (label === 'Movie' ? ' movie-col' : '') +
+    '">' +
+    '<div class="field-label">' +
+    esc(label) +
+    '</div>' +
+    '<div class="field-value' +
+    (extraClass ? ' ' + extraClass : '') +
+    '">' +
+    innerHtml +
+    '</div></div>'
+  );
+}
+
+function renderGuessRow(g) {
+  const yearStatus = relField(g.release_year, target.release_year, 'year');
+  const directorStatus = relField(g.director, target.director);
+  const leadActorStatus = leadRoleStatus(g.lead_actor, target);
+  const leadActressStatus = leadRoleStatus(g.lead_actress, target);
+  const ratingStatus = relField(g.rating, target.rating, 'rating');
+
+  const movieBlock =
+    '<div class="ar">' +
+    esc(g.arabic_title) +
+    '</div><div class="en">' +
+    esc(g.english_title) +
+    '</div>';
+
+  const fields = [
+    cellField('Movie', movieBlock, 'align-start'),
+    cellField(
+      'Year',
+      esc(g.release_year) + arrowHtml('release_year', yearStatus, g, target),
+      yearStatus
+    ),
+    cellField('Director', esc(g.director || '—'), directorStatus),
+    cellField('Lead Actor', esc(g.lead_actor || '—'), leadActorStatus),
+    cellField('Lead Actress', esc(g.lead_actress || '—'), leadActressStatus),
+    cellField('Supporting Actors', supportingCellHtml(g, target), 'align-start'),
+    cellField('Genre', genreCellHtml(g, target), 'align-start'),
+    cellField(
+      'Rating',
+      esc(g.rating) + arrowHtml('rating', ratingStatus, g, target),
+      ratingStatus
+    ),
+  ];
+
+  return (
+    '<article class="guess-card">' +
+    '<div class="fields">' +
+    fields.join('') +
+    '</div></article>'
+  );
+}
+
+function updateHudScore() {
+  const el = $('scoreDisplay');
+  if (gameFinished) {
+    el.textContent = finalScore != null ? String(finalScore) : '0';
+    return;
+  }
+  if (guesses.length >= MAX_GUESSES) {
+    el.textContent = '—';
+    return;
+  }
+  const nextGuess = guesses.length + 1;
+  const potential = calculateFinalScore(nextGuess, getElapsedSeconds(), true);
+  el.textContent = 'Potential: ' + potential;
+}
+
+function updateModeUi() {
+  const isDaily = gameMode === 'daily';
+  $('gameSubtitle').textContent = isDaily ? 'Daily Challenge' : 'Random Game';
+  $('modeDisplay').textContent = isDaily ? '📅 Daily' : '🎲 Random';
+  $('btnDaily').classList.toggle('active', isDaily);
+  $('btnRandom').classList.toggle('active', !isDaily);
+  $('btnModalDaily').style.display = isDaily ? 'none' : '';
+}
+
+function setSearchEnabled(enabled) {
+  $('q').disabled = !enabled;
+}
+
+function render() {
+  $('total').textContent = films.length;
+  $('count').textContent = guesses.length;
+  $('empty').style.display = guesses.length ? 'none' : 'block';
+  $('rows').innerHTML = guesses.map((g) => renderGuessRow(g)).join('');
+  updateHudScore();
+  updateModeUi();
+}
+
+function buildMovieInfoHtml(f) {
+  return (
+    '<b>' +
+    esc(f.english_title) +
+    '</b><br><br>' +
+    'Year: ' +
+    esc(f.release_year) +
+    '<br>Director: ' +
+    esc(f.director || '—') +
+    '<br>Lead Actor: ' +
+    esc(f.lead_actor || '—') +
+    '<br>Lead Actress: ' +
+    esc(f.lead_actress || '—') +
+    '<br>Genre: ' +
+    esc(formatGenreDisplay(f)) +
+    '<br>Rating: ' +
+    esc(f.rating)
+  );
+}
+
+function showResultModal(won) {
+  const elapsed = getElapsedSeconds();
+  $('modal').classList.add('show');
+  $('modalEmoji').textContent = won ? '🎉' : '';
+  $('modalTitle').textContent = won ? 'YOU GOT IT!' : 'GAME OVER';
+  $('modalTitle').classList.toggle('lose', !won);
+  $('ans').textContent = target.arabic_title;
+  $('modalSub').textContent = won ? '' : 'The movie was:';
+  $('modalScore').textContent = String(finalScore ?? 0);
+  $('modalTime').textContent = formatTimeHuman(elapsed);
+  $('modalGuesses').textContent = guesses.length + ' guess' + (guesses.length === 1 ? '' : 'es');
+  $('info').innerHTML = buildMovieInfoHtml(target);
+}
+
+function finishGame(won) {
+  gameFinished = true;
+  gameWon = won;
+  stopTimer();
+  if (won) {
+    finalScore = calculateFinalScore(guesses.length, getElapsedSeconds(), true);
+  } else {
+    finalScore = 0;
+  }
+  saveDailyGame();
+  setSearchEnabled(false);
+  render();
+  showResultModal(won);
+}
+
+function restoreFinishedDaily(saved) {
+  gameFinished = true;
+  gameWon = !!saved.won;
+  finalScore = saved.score != null ? saved.score : gameWon ? calculateFinalScore(guesses.length, saved.elapsedSeconds || 0, true) : 0;
+  gameStartTime = saved.startTime || Date.now();
+  timerEndTime = saved.endTime || gameStartTime;
+  frozenElapsedSeconds = saved.elapsedSeconds != null ? saved.elapsedSeconds : 0;
+  setSearchEnabled(false);
+  render();
+  showResultModal(gameWon);
+}
+
+function dailyGame() {
+  gameMode = 'daily';
+  target = getDailyFilm();
+  const today = getTodayKey();
+  const saved = loadDailyGame();
+
+  if (saved && saved.date === today) {
+    guesses = saved.guesses
+      .map((id) => films.find((f) => f.id === id))
       .filter(Boolean);
-  }else{
-    guesses=[];
-    localStorage.setItem('dailyGame',JSON.stringify({
-      date:today,
-      guesses:[],
-      finished:false
-    }));
+    gameFinished = !!saved.finished;
+    gameWon = !!saved.won;
+    finalScore = saved.score != null ? saved.score : null;
+    gameStartTime = saved.startTime || Date.now();
+    if (gameFinished) {
+      timerEndTime = saved.endTime || Date.now();
+      frozenElapsedSeconds =
+        saved.elapsedSeconds != null
+          ? saved.elapsedSeconds
+          : Math.floor(((saved.endTime || Date.now()) - gameStartTime) / 1000);
+      restoreFinishedDaily(saved);
+      return;
+    }
+    timerEndTime = null;
+    frozenElapsedSeconds = null;
+  } else {
+    guesses = [];
+    gameFinished = false;
+    gameWon = false;
+    finalScore = null;
+    resetTimerState();
+    saveDailyGame();
   }
 
+  setSearchEnabled(true);
   render();
-
-  const finished=saved && saved.date===today && saved.finished;
-
-  if(finished){
-    $('result').textContent=saved.won?'YOU GOT IT':'GAME OVER';
-    $('ans').textContent=target.arabic_title;
-    $('info').textContent=
-      target.english_title+' · '+
-      target.release_year+' · '+
-      target.director+' · '+
-      target.genre+' · '+
-      target.rating;
-
-    $('modal').classList.add('show');
-    $('q').disabled=true;
-  }else{
-    $('q').disabled=false;
-    $('q').focus();
-  }
-}
-
-function newGame(){
-  target=films[Math.floor(Math.random()*films.length)];
-  guesses=[];
-  $('mode').textContent='🎲 Random Game';
-  $('q').disabled=false;
-  render();
+  startTimer();
   $('q').focus();
 }
-function rel(a,b,type){if(type==='year'){let d=Math.abs(a-b);return d===0?'match':d<=5?'partial':'wrong';}if(type==='rating'){let d=Math.abs(a-b);return d===0?'match':d<=1?'partial':'wrong';}return norm(a)===norm(b)?'match':'wrong'}
-function render(){ 
-  $('total').textContent=films.length;
-  $('count').textContent=guesses.length;
-  $('empty').style.display=guesses.length?'none':'block';
 
-  $('rows').innerHTML=guesses.map(g=>{
-
-    let vals=[
-      ['release_year',rel(g.release_year,target.release_year,'year')],
-      ['director',rel(g.director,target.director)],
-      ['lead_actor',
-  norm(g.lead_actor)===norm(target.lead_actor)
-    ? 'match'
-    : (target.supporting_actors||[]).map(norm).includes(norm(g.lead_actor))
-      ? 'partial'
-      : 'wrong'
-],
-      ['lead_actress',
-  norm(g.lead_actress)===norm(target.lead_actress)
-    ? 'match'
-    : (target.supporting_actors||[]).map(norm).includes(norm(g.lead_actress))
-      ? 'partial'
-      : 'wrong'
-],
-      ['rating',rel(g.rating,target.rating,'rating')]
-    ];
-function genreList(f){
-  return Array.isArray(f.genres) ? f.genres : (f.genre ? [f.genre] : []);
-}
-
-function genreCell(f,target){
-  const targetGenres=genreList(target).map(norm);
-
-  return '<div class="cell"><div class="supporting-list">'+
-    genreList(f).map(genre=>{
-      const isMatch=targetGenres.includes(norm(genre));
-
-      return '<div class="supporting-actor '+(isMatch?'match':'wrong')+'">'+
-        esc(genre)+
-      '</div>';
-    }).join('')+
-  '</div></div>';
-}
-    const targetSupporting=(target.supporting_actors||[]).map(norm);
-const targetLeadActor=norm(target.lead_actor);
-const targetLeadActress=norm(target.lead_actress);
-
-const supportingCell=
-  '<div class="cell"><div class="supporting-list">'+
-  (g.supporting_actors||[]).map(actor=>{
-    const actorNorm=norm(actor);
-
-    const isMatch=targetSupporting.includes(actorNorm);
-
-    // Yellow if guessed supporting actor is the target's lead actor or lead actress
-    const isLeadCrossover=
-      actorNorm===targetLeadActor ||
-      actorNorm===targetLeadActress;
-
-    return '<div class="supporting-actor '+
-      (isMatch?'match':isLeadCrossover?'partial':'wrong')+'">'+
-      esc(actor)+
-    '</div>';
-
-  }).join('')+
-  '</div></div>';
-
-    return '<div class="row">'+
-
-      '<div class="cell movie"><div>'+
-        esc(g.arabic_title)+
-        '<small>'+esc(g.english_title)+'</small>'+
-      '</div></div>'+
-
-      vals.slice(0,4).map(v=>
-        '<div class="cell '+v[1]+'">'+
-          esc(g[v[0]])+
-          ((v[0]==='release_year'||v[0]==='rating')&&v[1]!=='match'
-            ?'<span class="arrow">'+
-              (Number(g[v[0]])<Number(target[v[0]])?'↑':'↓')+
-             '</span>'
-            :''
-          )+
-        '</div>'
-      ).join('')+
-
-      supportingCell+
-
-      genreCell(g,target)+
-
-      vals.slice(4).map(v=>
-        '<div class="cell '+v[1]+'">'+
-          esc(g[v[0]])+
-          ((v[0]==='release_year'||v[0]==='rating')&&v[1]!=='match'
-            ?'<span class="arrow">'+
-              (Number(g[v[0]])<Number(target[v[0]])?'↑':'↓')+
-             '</span>'
-            :''
-          )+
-        '</div>'
-      ).join('')+
-
-    '</div>';
-
-  }).join('');
-}
-function pick(f){
-  if(!f||guesses.some(x=>x.id===f.id)||guesses.length>=10)return;
-
-  guesses.push(f);
-
-  $('q').value='';
-  $('s').innerHTML='';
+function newGame() {
+  gameMode = 'random';
+  target = films[Math.floor(Math.random() * films.length)];
+  guesses = [];
+  gameFinished = false;
+  gameWon = false;
+  finalScore = null;
+  resetTimerState();
+  setSearchEnabled(true);
+  closeModal();
   render();
+  startTimer();
+  $('q').focus();
+}
 
-  const isDaily=$('mode').textContent.includes('Daily');
-  const won=f.id===target.id;
-  const lost=!won && guesses.length===10;
-
-  if(isDaily){
-    localStorage.setItem('dailyGame',JSON.stringify({
-      date:getTodayKey(),
-      guesses:guesses.map(x=>x.id),
-      finished:won||lost,
-      won:won
-    }));
+function pick(f) {
+  if (!f || gameFinished || guesses.some((x) => x.id === f.id) || guesses.length >= MAX_GUESSES) {
+    return;
   }
 
-  if(won){
-    $('result').textContent='YOU GOT IT';
-    $('ans').textContent=target.arabic_title;
-   $('info').innerHTML=
-    '<b>'+esc(target.english_title)+'</b><br><br>'+
-    'Year: '+esc(target.release_year)+'<br>'+
-    'Director: '+esc(target.director)+'<br>'+
-    'Lead Actor: '+esc(target.lead_actor)+'<br>'+
-    'Lead Actress: '+esc(target.lead_actress)+'<br>'+
-    'Genre: '+esc(target.genre)+'<br>'+
-    'Rating: '+esc(target.rating);
+  guesses.push(f);
+  $('q').value = '';
+  clearSuggestions();
 
-    $('modal').classList.add('show');
+  const won = f.id === target.id;
+  const lost = !won && guesses.length >= MAX_GUESSES;
 
-    if(isDaily)$('q').disabled=true;
+  if (gameMode === 'daily') {
+    saveDailyGame();
+  }
 
-}else if(lost){
-  $('result').textContent='GAME OVER';
-  $('ans').textContent=target.arabic_title;
+  render();
 
-  $('info').innerHTML=
-    '<b>'+esc(target.english_title)+'</b><br><br>'+
-    'Year: '+esc(target.release_year)+'<br>'+
-    'Director: '+esc(target.director)+'<br>'+
-    'Lead Actor: '+esc(target.lead_actor)+'<br>'+
-    'Lead Actress: '+esc(target.lead_actress)+'<br>'+
-    'Genre: '+esc(target.genre)+'<br>'+
-    'Rating: '+esc(target.rating);
-
-  $('modal').classList.add('show');
-
-  if(isDaily)$('q').disabled=true;
+  if (won || lost) {
+    finishGame(won);
+  } else if (gameMode === 'daily') {
+    saveDailyGame();
+  }
 }
+
+function clearSuggestions() {
+  currentSuggestions = [];
+  suggestionHighlight = -1;
+  const box = $('s');
+  box.innerHTML = '';
+  box.hidden = true;
 }
-$('q').addEventListener('input',()=>{let q=norm($('q').value);if(!q){$('s').innerHTML='';return}let list=films.filter(f=>!guesses.some(g=>g.id===f.id)&&(norm(f.arabic_title).includes(q)||norm(f.english_title).includes(q))).slice(0,10);$('s').innerHTML=list.map(f=>'<div class="suggestion" data-id="'+f.id+'"><span>'+esc(f.arabic_title)+'</span><span class="muted">'+esc(f.english_title)+'</span></div>').join('');
-$('s').querySelectorAll('.suggestion').forEach(e=>e.onclick=()=>pick(films.find(f=>f.id==e.dataset.id)))})
-$('q').addEventListener('keydown',e=>{if(e.key==='Enter'){let e1=$('s').querySelector('.suggestion');if(e1)pick(films.find(f=>f.id==e1.dataset.id))}});function closeModal(){$('modal').classList.remove('show')}dailyGame();
-</script></body></html>
+
+function renderSuggestions() {
+  const box = $('s');
+  const q = norm($('q').value);
+  if (!q || gameFinished) {
+    clearSuggestions();
+    return;
+  }
+
+  currentSuggestions = films
+    .filter(
+      (f) =>
+        !guesses.some((g) => g.id === f.id) &&
+        (norm(f.arabic_title).includes(q) || norm(f.english_title).includes(q))
+    )
+    .slice(0, 10);
+
+  if (!currentSuggestions.length) {
+    clearSuggestions();
+    return;
+  }
+
+  box.hidden = false;
+  box.innerHTML = currentSuggestions
+    .map((f, i) => {
+      const active = i === suggestionHighlight ? ' active' : '';
+      return (
+        '<div class="suggestion' +
+        active +
+        '" role="option" data-id="' +
+        f.id +
+        '" data-index="' +
+        i +
+        '"><span>' +
+        esc(f.arabic_title) +
+        '</span><span class="en">' +
+        esc(f.english_title) +
+        '</span></div>'
+      );
+    })
+    .join('');
+
+  box.querySelectorAll('.suggestion').forEach((el) => {
+    el.addEventListener('click', () => {
+      const film = films.find((x) => x.id === Number(el.dataset.id));
+      pick(film);
+    });
+  });
+}
+
+function pickHighlightedOrFirst() {
+  const idx = suggestionHighlight >= 0 ? suggestionHighlight : 0;
+  const f = currentSuggestions[idx];
+  if (f) pick(f);
+}
+
+function closeModal() {
+  $('modal').classList.remove('show');
+}
+
+function initSearch() {
+  const input = $('q');
+
+  input.addEventListener('input', () => {
+    suggestionHighlight = -1;
+    renderSuggestions();
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!currentSuggestions.length) return;
+      suggestionHighlight = Math.min(suggestionHighlight + 1, currentSuggestions.length - 1);
+      renderSuggestions();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!currentSuggestions.length) return;
+      suggestionHighlight = Math.max(suggestionHighlight - 1, 0);
+      renderSuggestions();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      pickHighlightedOrFirst();
+    } else if (e.key === 'Escape') {
+      clearSuggestions();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) clearSuggestions();
+  });
+}
+
+function initButtons() {
+  $('btnDaily').addEventListener('click', () => dailyGame());
+  $('btnRandom').addEventListener('click', () => newGame());
+  $('btnModalClose').addEventListener('click', closeModal);
+  $('btnModalRandom').addEventListener('click', () => {
+    closeModal();
+    newGame();
+  });
+  $('btnModalDaily').addEventListener('click', () => {
+    closeModal();
+    dailyGame();
+  });
+}
+
+initSearch();
+initButtons();
+dailyGame();
+
+</script>
+</body>
+</html>
